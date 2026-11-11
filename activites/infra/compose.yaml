@@ -11,12 +11,8 @@ x-horloge: &horloge
   profiles: ["temps"]
   image: lab-horloge
   build:
-    dockerfile_inline: |
-      FROM debian:12-slim
-      RUN apt-get update \
-       && apt-get install -y --no-install-recommends chrony faketime ca-certificates \
-       && rm -rf /var/lib/apt/lists/*
-      RUN printf 'local stratum 8\nallow all\n' > /etc/chrony/lab.conf
+    context: .
+    dockerfile: Dockerfile.horloge
 
 services:
   # Serveur NTP du labo : sert l'heure de la machine hôte (il ne peut pas la modifier).
@@ -37,7 +33,7 @@ services:
   broker:
     image: eclipse-mosquitto:2
     ports:
-      - "1883:1883"   # accès direct (fiable)
+      - "1883:1883" # accès direct (fiable)
     volumes:
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: unless-stopped
@@ -48,8 +44,8 @@ services:
     image: ghcr.io/shopify/toxiproxy:2.12.0
     command: ["-host=0.0.0.0", "-config=/config/toxiproxy.json"]
     ports:
-      - "1884:1884"   # accès via le proxy (dégradable)
-      - "8474:8474"   # API d'administration de Toxiproxy
+      - "1884:1884" # accès via le proxy (dégradable)
+      - "8474:8474" # API d'administration de Toxiproxy
     volumes:
       - ./toxiproxy.json:/config/toxiproxy.json:ro
     depends_on:
@@ -61,7 +57,7 @@ services:
     image: rabbitmq:4.0-management
     ports:
       - "5672:5672"
-      - "1885:1883"   # MQTT RabbitMQ, décalé pour ne pas entrer en conflit
+      - "1885:1883" # MQTT RabbitMQ, décalé pour ne pas entrer en conflit
       - "15672:15672" # console http://localhost:15672
     environment:
       RABBITMQ_DEFAULT_USER: ict

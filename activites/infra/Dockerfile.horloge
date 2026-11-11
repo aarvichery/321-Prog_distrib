@@ -1,0 +1,7 @@
+FROM debian:12-slim
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends chrony faketime ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN printf 'local stratum 8\nallow all\n' > /etc/chrony/lab.conf
